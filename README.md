@@ -1,6 +1,6 @@
 # Textual-Mitms
 
-![Textual-Mitms Demo](demo-textual-mitms.gif)
+![Textual-Mitms Demo](https://github.com/user-attachments/assets/8551fecb-a3ad-4889-84eb-84a446e51f06)
 
 ## Installing
 
