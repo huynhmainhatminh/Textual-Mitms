@@ -1,6 +1,9 @@
 # Textual-Mitms
 
-![Textual-Mitms Demo](https://github.com/user-attachments/assets/8551fecb-a3ad-4889-84eb-84a446e51f06)
+**Textual-Mitms is a terminal-based MITM proxy tool built on Textual and mitmproxy.**
+It allows you to capture, view, and filter HTTP/HTTPS, WebSocket, and TCP packets directly within a TUI—offering a compact, fast, and simple experience without the need to open a web browser.
+
+![Textual-Mitms Demo](demo-textual-mitms.gif)
 
 ## Installing
 
