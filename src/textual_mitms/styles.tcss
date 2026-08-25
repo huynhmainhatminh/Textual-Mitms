@@ -1,0 +1,222 @@
+/* ui/styles.tcss */
+
+/* ========================================= */
+/* CSS CHO MAIN APP (app.py)                 */
+/* ========================================= */
+.config-panel { border: heavy $panel-lighten-2; padding: 1 1; }
+#config_1 { height: auto; padding: 1 2; align-vertical: middle; background: $panel-darken-1; border-bottom: heavy $panel-lighten-2; }
+#config_2 { height: 2; align-vertical: middle; }
+#config_2.-hidden { display: none; }
+#config_3 { height: 2fr; layers: base menu; }
+DataTable { height: 1fr; layer: base; }
+DataTable > .datatable--header { text-style: bold; background: $panel; color: $text-muted; }
+
+/* Màu dòng đang được chọn trong DataTable */
+DataTable > .datatable--cursor {
+    background: #ffd700;
+    color: black;
+    text-style: bold;
+}
+
+Tab { margin: 0 1; color: $text; }
+/* Thanh màu dưới Tab đang được chọn */
+Tabs .underline--bar {
+    color: #ffd700;
+}
+
+Tabs#application-protocols { height: 2; background: $panel-darken-1; border-right: heavy $panel-lighten-2; width: 0.9fr; }
+Tabs#http-version { height: 2; background: $panel-darken-1; border-right: heavy $panel-lighten-2; width: 0.7fr; }
+Tabs#mime-types { height: 2; background: $panel-darken-1; border-right: heavy $panel-lighten-2; width: 1fr; }
+Tabs#status-codes { height: 2; background: $panel-darken-1; width: 0.8fr; }
+#nav-traffic { text-style: bold; padding: 0 1; background: $panel-darken-1; border-bottom: heavy $panel-lighten-2; border-right: heavy $panel-lighten-2; border-left: heavy $panel-lighten-2; }
+#btn-col-config { border: none; border-bottom: heavy $panel-lighten-2; border-left: heavy $panel-lighten-2; background: $panel-darken-1; color: $text; text-style: bold; border-right: heavy $panel-lighten-2; }
+#lbl-proxy { text-style: bold; color: $accent; margin-right: 1; }
+#lbl-status-icon { color: $error; text-style: bold; margin-right: 1; }
+#lbl-status-icon.-running { color: $success; }
+#input-proxy { height: 1; width: 20; border: none; background: $panel-darken-2; margin-right: 2; }
+#input-proxy:focus { background: $panel-lighten-2; text-style: bold; }
+
+/* Cập nhật Các nút bấm trên thanh công cụ: Thêm 2 nút Toggle mới vào danh sách */
+#btn-toggle-run, #btn-clear-data, #btn-toggle-filter, #btn-allow-hosts, #btn-ignore-hosts, #btn-options {
+    min-width: 3;
+    height: 1;
+    border: none;
+    margin-right: 1;
+    text-style: bold;
+}
+
+/* Đảm bảo hai nút Toggle mới có chiều rộng đủ lớn để hiển thị chữ (VD: HTTP2: ON) */
+#btn-toggle-http2, #btn-toggle-http3 {
+    min-width: 14;
+    padding: 0 1;
+}
+
+/* Menu chọn cột */
+#col-menu { layer: menu; display: none; dock: right; width: 25; height: auto; max-height: 15; background: $surface; border: round $accent; padding: 0 1; }
+#col-menu.-show { display: block; }
+#col-menu Label { text-style: bold; margin-bottom: 1; border-bottom: solid $panel-lighten-2; width: 100%; text-align: center; }
+#col-menu SelectionList { border: none; height: auto; }
+SelectionList > .selection-list--button { color: $error; }
+SelectionList > .selection-list--button-selected { color: $success; }
+#btn-close-menu { width: 100%; margin-top: 1; }
+
+
+/* ========================================= */
+/* CSS CHO CỬA SỔ NHẬP DOMAIN (PromptModal)  */
+/* ========================================= */
+PromptModal { align: center middle; background: rgba(0, 0, 0, 0.7); }
+#prompt-dialog { width: 50; height: auto; background: $surface; padding: 1 2; border: thick $accent; }
+#prompt-input { margin-bottom: 1; }
+#prompt-buttons { height: auto; align: center middle; }
+#prompt-buttons Button { margin: 0 1; min-width: 10; border: none; }
+
+
+/* ========================================= */
+/* CSS CHO MODAL CHI TIẾT GÓI TIN (modal.py) */
+/* ========================================= */
+HttpDetailModal { align: center middle; background: rgba(0, 0, 0, 0.85); layers: base menu; }
+#dialog-box { width: 95%; height: 90%; background: $surface; padding: 1 2; layers: base menu; }
+#split-container { height: 1fr; layer: base; }
+
+.column-wrapper { height: 1fr; width: 1fr; border: round #00ffaf; transition: border 150ms; padding: 0 1; }
+#left-wrapper { margin-right: 1; }
+#right-wrapper { margin-left: 1; }
+.selected-panel { border: round purple; }
+
+#panel-request, #panel-response { height: 1fr; width: 100%; }
+.info-line { height: auto; max-height: 2; margin-bottom: 1; text-style: bold; }
+.text-bold { text-style: bold; margin: 1 0 0 0; height: auto; }
+.spacer { width: 1fr; }
+
+Tabs#view-request, Tabs#view-response { height: 3; background: $panel-darken-1; width: 100%; margin-bottom: 1; }
+.content-box { height: 1fr; width: 100%; margin-top: 1; }
+TextArea, DataTable { height: 1fr; width: 100%; background: $panel-darken-1; border: none; }
+
+/* Highlight khi tìm kiếm trong TextArea */
+TextArea .text-area--cursor {
+    background: #ffd700;
+    color: black;
+    text-style: bold;
+}
+
+/* Selection (vùng bôi đen khi match) */
+TextArea:focus {
+    /* giữ nguyên */
+}
+
+/* Một số phiên bản Textual dùng class này */
+.text-area--selection {
+    background: #ffd700 50%;
+    color: black;
+    text-style: bold;
+}
+
+/* Smart Search */
+.search-bar-container { height: auto; width: 100%; align-vertical: middle; margin-top: 1; display: none; background: $panel; border: tall $panel-lighten-2; padding: 0 1; }
+.search-bar-container.-show { display: block; }
+.search-bar-container:focus-within { border: tall $accent; }
+.search-input { width: 1fr; border: none; background: transparent; height: 1; min-height: 1; }
+.search-count { padding: 0 1; text-style: bold; color: $text-muted; align-vertical: middle; }
+.search-nav-btn { min-width: 3; height: 1; border: none; background: $surface; margin-left: 1; }
+.search-nav-btn:hover { background: $accent; color: white; }
+
+#dialog-header { height: auto; width: 100%; margin-bottom: 1; layer: base; }
+#btn-menu { min-width: 3; border: none; background: $panel; color: $text; text-style: bold; }
+#btn-close { min-width: 5; border: none; background: $panel; color: $text; text-style: bold; }
+#btn-close:hover { background: $error; color: white; }
+
+/* Action Menu */
+#action-menu { layer: menu; display: none; position: absolute; offset: 0 1; width: 30; height: auto; max-height: 15; background: $surface; border: round $accent; padding: 1; }
+#action-menu.-show { display: block; }
+#action-menu Button { text-style: bold; margin-bottom: 1; border: none; width: 100%; text-align: left; background: $panel-darken-1; transition: background 150ms; }
+#action-menu Button:hover { background: $success; color: white; }
+.code-box-log { height: 1fr; background: $panel-darken-1; border: none; padding: 0 1; }
+
+.-hidden { display: none !important; }
+/* ========================================= */
+/* CSS CHO OPTIONS MODAL                     */
+/* ========================================= */
+OptionsModal {
+    align: center middle;
+    background: rgba(0, 0, 0, 0.7);
+}
+
+#options-dialog {
+    width: 40;
+    height: auto;
+    max-height: 90%;
+    background: $surface;
+    border: heavy $accent;
+    padding: 1 1;
+}
+
+.section-title {
+    text-style: bold;
+    color: $text-muted;
+    margin: 1 0 0 0;
+    width: 100%;
+}
+
+.option-row {
+    height: 3;
+    align-vertical: middle;
+    margin: 0;
+    padding: 0 1;
+}
+
+.option-label {
+    width: 1fr;
+    text-style: bold;
+    color: $text;
+}
+
+#options-buttons {
+    height: auto;
+    align: center middle;
+    margin-top: 1;
+}
+
+#options-buttons Button {
+    min-width: 12;
+    margin: 0 1;
+    border: none;
+    text-style: bold;
+}
+
+/* ========================================= */
+/* SWITCH – Đơn giản, rõ nét, đồng màu       */
+/* ========================================= */
+Switch {
+    height: 1;
+    width: 8;
+    padding: 0 1;
+    border: none;
+    outline: none;
+    background: transparent;
+}
+
+
+/* Thanh tìm kiếm nâng cao trong config_1 */
+#search-field {
+    width: 18;
+    margin-right: 1;
+    color: $text;
+}
+
+#search-mode {
+    width: 18;
+    margin-right: 1;
+    color: $text;
+}
+
+#search-input {
+    width: 1fr;
+    min-width: 20;
+    height: 1;
+    border: none;
+    background: $panel-darken-2;
+}
+
+#search-input:focus {
+    background: $panel-lighten-2;
+}

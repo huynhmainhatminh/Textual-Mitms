@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "textual-mitms"
+version = "0.1.0"
+description = "A tool for capturing full network traffic (HTTP/HTTPS, WebSocket, TCP) based on mitmproxy and the Textual terminal user interface."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [
+    { name = "NhatMinh2805", email = "minhlapp2@gmail.com" }
+]
+keywords = ["mitmproxy", "textual", "proxy", "http", "tui"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Internet :: Proxy Servers",
+    "Topic :: Security",
+]
+
+dependencies = [
+    "textual==8.2.8",
+    "mitmproxy==11.0.2",
+]
+
+[project.urls]
+Homepage = "https://github.com/huynhmainhatminh/Textual-Mitms"
+Repository = "https://github.com/huynhmainhatminh/Textual-Mitms"
+
+# Lệnh chạy sau khi pip install
+[project.scripts]
+textual-mitms = "textual_mitms.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# Đóng gói file .tcss cùng package
+[tool.setuptools.package-data]
+textual_mitms = ["*.tcss", "**/*.tcss"]

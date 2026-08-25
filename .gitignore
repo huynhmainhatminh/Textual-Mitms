@@ -1,0 +1,32 @@
+# Virtual env
+.venv/
+venv/
+env/
+
+
+dist/
+build/
+*.egg-info/
+.eggs/
+
+
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+
+.idea/
+.vscode/
+*.swp
+
+
+.pypirc
+.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+
+*.log
