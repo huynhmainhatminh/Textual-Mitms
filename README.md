@@ -1,5 +1,6 @@
 # Textual-Mitms
 
+![Textual-Mitms Demo](./demo-textual-mitms.gif)
 
 ## Installing
 
