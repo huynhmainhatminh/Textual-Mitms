@@ -1,6 +1,6 @@
 # core/addon.py
-from mitmproxy import http, tcp
-
+from . import *
+from .utils import host_matches_any
 
 class TextualMitmAddon:
     """
@@ -21,23 +21,29 @@ class TextualMitmAddon:
         except RuntimeError:
             pass
 
+    def _row_key(self, flow, suffix: str | None = None) -> str:
+        # mitmproxy.flow.Flow.id: unique UUID for this flow
+        fid = getattr(flow, "id", "") or ""
+        if suffix:
+            return f"{fid}:{suffix}"
+        return fid
+
+    def _send_flow_record(self, flow, data: dict, suffix: str | None = None) -> None:
+        data["flow_id"] = getattr(flow, "id", "") or ""
+        data["row_key"] = self._row_key(flow, suffix)
+        self._send_to_app(data)
+
     def _should_process(self, host: str) -> bool:
+        # Cùng thứ tự NextLayer._ignore_connection:
+        # allow_hosts trước (whitelist), ignore_hosts sau (blacklist).
+        # List rỗng = không áp tầng đó.
         if not host:
             return True
-        host_lower = host.lower()
-        ignored = self.app.ignored_hosts
         allowed = self.app.allowed_hosts
-
-        def is_match(target_host: str, rule_set: set) -> bool:
-            for rule in rule_set:
-                rule_lower = rule.strip().lower()
-                if target_host == rule_lower or target_host.endswith(f".{rule_lower}"):
-                    return True
+        ignored = self.app.ignored_hosts
+        if allowed and not host_matches_any(host, allowed):
             return False
-
-        if ignored and is_match(host_lower, ignored):
-            return False
-        if allowed and not is_match(host_lower, allowed):
+        if ignored and host_matches_any(host, ignored):
             return False
         return True
 
@@ -131,7 +137,7 @@ class TextualMitmAddon:
                 "mime_category": "UNKNOWN",
                 "status_category": "REQ",
             }
-            self._send_to_app(data)
+            self._send_flow_record(flow, data)
         except Exception:
             pass
 
@@ -162,7 +168,7 @@ class TextualMitmAddon:
                 "mime_category": "UNKNOWN",
                 "status_category": "REQ",
             }
-            self._send_to_app(data)
+            self._send_flow_record(flow, data)
         except Exception:
             pass
 
@@ -194,7 +200,7 @@ class TextualMitmAddon:
                 "mime_category": self._detect_mime(content_type),
                 "status_category": f"{str(res.status_code)[0]}xx" if res else "ERR",
             }
-            self._send_to_app(data)
+            self._send_flow_record(flow, data)
         except Exception:
             pass
 
@@ -243,7 +249,7 @@ class TextualMitmAddon:
                 "mime_category": mime_category,
                 "status_category": status_category,
             }
-            self._send_to_app(data)
+            self._send_flow_record(flow, data)
         except Exception:
             pass
 
@@ -271,7 +277,7 @@ class TextualMitmAddon:
                 "mime_category": "UNKNOWN",
                 "status_category": "ERR",
             }
-            self._send_to_app(data)
+            self._send_flow_record(flow, data)
         except Exception:
             pass
 
@@ -303,13 +309,16 @@ class TextualMitmAddon:
                 "mime_category": "UNKNOWN",
                 "status_category": "UNKNOWN",
             }
-            self._send_to_app(data)
+            # Cùng HTTPFlow.id với handshake HTTP — tách hàng, không đè request/response
+            self._send_flow_record(flow, data, suffix="ws:start")
         except Exception:
             pass
 
     def websocket_message(self, flow: http.HTTPFlow) -> None:
         host = flow.request.pretty_host if flow.request else ""
         if not self._should_process(host):
+            return
+        if not flow.websocket or not flow.websocket.messages:
             return
         try:
             message = flow.websocket.messages[-1]
@@ -332,7 +341,7 @@ class TextualMitmAddon:
                 "mime_category": "UNKNOWN",
                 "status_category": "UNKNOWN",
             }
-            self._send_to_app(data)
+            self._send_flow_record(flow, data, suffix=f"ws:{len(flow.websocket.messages)}")
         except Exception:
             pass
 
@@ -362,7 +371,7 @@ class TextualMitmAddon:
                 "mime_category": "UNKNOWN",
                 "status_category": "UNKNOWN",
             }
-            self._send_to_app(data)
+            self._send_flow_record(flow, data, suffix="ws:end")
         except Exception:
             pass
 
@@ -395,13 +404,15 @@ class TextualMitmAddon:
                 "mime_category": "BINARY",
                 "status_category": "UNKNOWN",
             }
-            self._send_to_app(data)
+            self._send_flow_record(flow, data)
         except Exception:
             pass
 
     def tcp_message(self, flow: tcp.TCPFlow) -> None:
         server_addr = flow.server_conn.address[0] if flow.server_conn and flow.server_conn.address else "Unknown"
         if not self._should_process(server_addr):
+            return
+        if not flow.messages:
             return
         try:
             message = flow.messages[-1]
@@ -425,7 +436,7 @@ class TextualMitmAddon:
                 "mime_category": "BINARY",
                 "status_category": "UNKNOWN",
             }
-            self._send_to_app(data)
+            self._send_flow_record(flow, data, suffix=f"tcp:{len(flow.messages)}")
         except Exception:
             pass
 
@@ -454,7 +465,7 @@ class TextualMitmAddon:
                 "mime_category": "BINARY",
                 "status_category": "UNKNOWN",
             }
-            self._send_to_app(data)
+            self._send_flow_record(flow, data)
         except Exception:
             pass
 
@@ -481,6 +492,6 @@ class TextualMitmAddon:
                 "mime_category": "UNKNOWN",
                 "status_category": "ERR",
             }
-            self._send_to_app(data)
+            self._send_flow_record(flow, data)
         except Exception:
             pass

@@ -4,7 +4,7 @@
 /* CSS CHO MAIN APP (app.py)                 */
 /* ========================================= */
 .config-panel { border: heavy $panel-lighten-2; padding: 1 1; }
-#config_1 { height: auto; padding: 1 2; align-vertical: middle; background: $panel-darken-1; border-bottom: heavy $panel-lighten-2; }
+#config_1 { height: auto; padding: 1 1; align-vertical: middle; background: $panel-darken-1; border-bottom: heavy $panel-lighten-2; }
 #config_2 { height: 2; align-vertical: middle; }
 #config_2.-hidden { display: none; }
 #config_3 { height: 2fr; layers: base menu; }
@@ -75,7 +75,7 @@ PromptModal { align: center middle; background: rgba(0, 0, 0, 0.7); }
 /* CSS CHO MODAL CHI TIẾT GÓI TIN (modal.py) */
 /* ========================================= */
 HttpDetailModal { align: center middle; background: rgba(0, 0, 0, 0.85); layers: base menu; }
-#dialog-box { width: 95%; height: 90%; background: $surface; padding: 1 2; layers: base menu; }
+#dialog-box { width: 95%; height: 90%; background: $surface; border: solid $accent; padding: 1 1; layers: base menu; }
 #split-container { height: 1fr; layer: base; }
 
 .column-wrapper { height: 1fr; width: 1fr; border: round #00ffaf; transition: border 150ms; padding: 0 1; }
@@ -198,15 +198,19 @@ Switch {
 
 /* Thanh tìm kiếm nâng cao trong config_1 */
 #search-field {
-    width: 18;
+    width: 20;
     margin-right: 1;
     color: $text;
+    border-right: heavy $panel-lighten-2;
+    border-left: heavy $panel-lighten-2;
 }
 
 #search-mode {
-    width: 18;
+    width: 20;
     margin-right: 1;
     color: $text;
+    border-right: heavy $panel-lighten-2;
+    border-left: heavy $panel-lighten-2;
 }
 
 #search-input {

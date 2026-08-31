@@ -1,126 +1,18 @@
-# ui/modal.py
+# ui/http_detail_modal.py
+import json
+import time
+import os
 from textual.app import ComposeResult
-from textual.containers import Horizontal, Vertical, VerticalScroll
+from textual.containers import Horizontal, Vertical
 from textual.widgets import Button, Label, Static, Tabs, Tab, TextArea, Input, DataTable
 from textual.screen import ModalScreen
 from textual import events, on
 from rich.text import Text
 from textual.widgets.text_area import Selection as TASelection
-from pathlib import Path
+
 # Import bộ công cụ xử lý logic
 from .core.utils import parse_headers_to_list, format_secure_json, build_curl_command, build_row_string
-
-
-class PromptModal(ModalScreen[set]):
-    """Cửa sổ nhỏ gọn để người dùng nhập Domain và quản lý danh sách đã thêm dưới dạng Thẻ (Tags)."""
-
-    CSS = """
-    PromptModal { align: center middle; background: rgba(0, 0, 0, 0.7); }
-    #prompt-dialog { width: 50; height: auto; max-height: 80%; background: $surface; padding: 1 2; border: heavy $accent; }
-    #prompt-title { text-style: bold; margin-bottom: 1; text-align: center; width: 100%; color: $text; }
-
-    /* Box hiển thị danh sách đã thêm */
-    #host-list-box { 
-        height: auto; 
-        max-height: 12; 
-        margin-bottom: 1; 
-        border: round $panel-lighten-2; 
-        background: $panel-darken-2; 
-        padding: 1; 
-    }
-
-    /* Giao diện từng dòng Host: Đóng khung như một Thẻ (Tag) */
-    .host-row { 
-        height: 3; 
-        margin-bottom: 1; 
-        align-vertical: middle; 
-        border: solid $panel-lighten-2; 
-        background: $panel; 
-        padding: 0 1; 
-    }
-    .host-name { width: 1fr; text-style: bold; align-vertical: middle; color: $success; }
-
-    /* Nút xóa dấu trừ: Nền trong suốt, nổi đỏ khi hover */
-    .btn-remove-host { min-width: 3; height: 1; border: none; background: transparent; color: $error; text-style: bold; }
-    .btn-remove-host:hover { background: $error; color: white; }
-
-    #prompt-input { margin-bottom: 1; }
-    #prompt-buttons { height: auto; align: center middle; }
-    #prompt-buttons Button { margin: 0 1; min-width: 10; }
-    .-hidden { display: none !important; }
-    """
-
-    def __init__(self, title: str, placeholder: str, current_hosts: set):
-        super().__init__()
-        self.title = title
-        self.placeholder = placeholder
-        self.working_hosts = set(current_hosts)
-        self.sorted_hosts = []
-
-    def compose(self) -> ComposeResult:
-        with Vertical(id="prompt-dialog") as prompt_dialog:
-            prompt_dialog.border_title = f"{self.title}"
-            prompt_dialog.styles.border_title_align = "center"
-            yield VerticalScroll(id="host-list-box", classes="-hidden")
-            yield Input(placeholder=self.placeholder, id="prompt-input")
-
-            with Horizontal(id="prompt-buttons"):
-                yield Button("Save", id="btn-save", variant="success")
-                yield Button("Cancel", id="btn-cancel", variant="error")
-
-    def on_mount(self) -> None:
-        self._refresh_host_list()
-        self.query_one("#prompt-input", Input).focus()
-
-    def _refresh_host_list(self) -> None:
-        list_box = self.query_one("#host-list-box", VerticalScroll)
-        list_box.remove_children()
-
-        if self.working_hosts:
-            list_box.remove_class("-hidden")
-            self.sorted_hosts = sorted(list(self.working_hosts))
-
-            for idx, host in enumerate(self.sorted_hosts):
-                row = Horizontal(
-                    Label(f"• {host}", classes="host-name"),
-                    Button("-", id=f"del__{idx}", classes="btn-remove-host"),
-                    classes="host-row"
-                )
-                list_box.mount(row)
-        else:
-            list_box.add_class("-hidden")
-            self.sorted_hosts = []
-
-    @on(Button.Pressed)
-    def handle_buttons(self, event: Button.Pressed) -> None:
-        button_id = event.button.id
-        if button_id and button_id.startswith("del__"):
-            try:
-                idx_str = button_id.replace("del__", "")
-                idx = int(idx_str)
-
-                host_to_remove = self.sorted_hosts[idx]
-
-                if host_to_remove in self.working_hosts:
-                    self.working_hosts.remove(host_to_remove)
-                    self._refresh_host_list()
-            except (ValueError, IndexError):
-                pass
-
-    @on(Button.Pressed, "#btn-save")
-    def save_action(self) -> None:
-        val = self.query_one("#prompt-input", Input).value.strip()
-        if val:
-            self.working_hosts.add(val)
-        self.dismiss(self.working_hosts)
-
-    @on(Button.Pressed, "#btn-cancel")
-    def cancel_action(self) -> None:
-        self.dismiss(None)
-
-    @on(Input.Submitted, "#prompt-input")
-    def submit_action(self) -> None:
-        self.save_action()
+from .convert_curl_modal import CurlConverterModal
 
 
 class ClickableVertical(Vertical):
@@ -134,10 +26,28 @@ class ClickableVertical(Vertical):
 
 
 class HttpDetailModal(ModalScreen):
-    """Màn hình Modal chi tiết HTTP (Đã được tái cấu trúc sạch sẽ)."""
+    """Màn hình Modal chi tiết HTTP."""
 
-    # Nạp CSS từ file ngoài
-    CSS_PATH = str(Path(__file__).parent / "styles.tcss")
+    CSS_PATH = "styles.tcss"
+
+    CSS = """
+    .tab-bar-wrapper {
+        height: 3;
+        width: 100%;
+        margin-bottom: 1;
+    }
+
+    #view-request, #view-response {
+        width: 1fr !important;
+        margin-bottom: 0 !important;
+    }
+
+    .btn-copy-tab, .btn-save-tab {
+        min-width: 8;
+        border: none;
+        margin-left: 1;
+    }
+    """
 
     BINDINGS = [
         ("escape", "app.pop_screen", "Đóng"),
@@ -172,6 +82,7 @@ class HttpDetailModal(ModalScreen):
                 yield Button("Copy cURL", id="btn-copy-curl")
                 yield Button("Copy URL", id="btn-copy-url")
                 yield Button("Copy Row", id="btn-copy-row")
+                yield Button("Convert curl commands", id="btn-convert-curl")
 
             with Horizontal(id="dialog-header"):
                 yield Button("☰", id="btn-menu")
@@ -185,19 +96,23 @@ class HttpDetailModal(ModalScreen):
                     p_req.styles.border_title_align = "center"
                     with Vertical(id="panel-request"):
                         yield Static(f"[{self.method}] {self.url}", classes="info-line")
-                        yield Tabs(
-                            Tab("Pretty", id="view_pretty_request"), Tab("Raw", id="view_raw_request"),
-                            Tab("Headers", id="view_headers_request"), id="view-request"
+
+                        with Horizontal(classes="tab-bar-wrapper"):
+                            yield Tabs(
+                                Tab("Pretty", id="view_pretty_request"),
+                                Tab("Raw", id="view_raw_request"),
+                                Tab("Headers", id="view_headers_request"),
+                                id="view-request"
                             )
+                            yield Button("Copy", id="btn-copy-req", variant="success", classes="btn-copy-tab")
+                            yield Button("Save", id="btn-save-req", variant="primary", classes="btn-save-tab")
+
                         yield Label("Nội dung Request", classes="text-bold")
                         with Vertical(classes="content-box"):
                             yield TextArea(id="req-content-area", read_only=True)
                             yield DataTable(id="req-headers-table", zebra_stripes=True, classes="-hidden")
                         with Horizontal(classes="search-bar-container", id="req-search-bar"):
-                            yield Input(
-                                placeholder="Search Request", classes="search-input",
-                                id="input-req-search"
-                                )
+                            yield Input(placeholder="Search Request", classes="search-input", id="input-req-search")
                             yield Label("0/0", id="lbl-req-count", classes="search-count")
                             yield Button("▲", id="btn-req-prev", classes="search-nav-btn")
                             yield Button("▼", id="btn-req-next", classes="search-nav-btn")
@@ -208,19 +123,23 @@ class HttpDetailModal(ModalScreen):
                     p_res.styles.border_title_align = "center"
                     with Vertical(id="panel-response"):
                         yield Static(f"Status: {self.status}", classes="info-line")
-                        yield Tabs(
-                            Tab("Pretty", id="view_pretty_response"), Tab("Raw", id="view_raw_response"),
-                            Tab("Headers", id="view_headers_response"), id="view-response"
+
+                        with Horizontal(classes="tab-bar-wrapper"):
+                            yield Tabs(
+                                Tab("Pretty", id="view_pretty_response"),
+                                Tab("Raw", id="view_raw_response"),
+                                Tab("Headers", id="view_headers_response"),
+                                id="view-response"
                             )
+                            yield Button("Copy", id="btn-copy-res", variant="success", classes="btn-copy-tab")
+                            yield Button("Save", id="btn-save-res", variant="primary", classes="btn-save-tab")
+
                         yield Label("Nội dung Response", classes="text-bold")
                         with Vertical(classes="content-box"):
                             yield TextArea(id="res-content-area", read_only=True)
                             yield DataTable(id="res-headers-table", zebra_stripes=True, classes="-hidden")
                         with Horizontal(classes="search-bar-container", id="res-search-bar"):
-                            yield Input(
-                                placeholder="Search Response", classes="search-input",
-                                id="input-res-search"
-                                )
+                            yield Input(placeholder="Search Response", classes="search-input", id="input-res-search")
                             yield Label("0/0", id="lbl-res-count", classes="search-count")
                             yield Button("▲", id="btn-res-prev", classes="search-nav-btn")
                             yield Button("▼", id="btn-res-next", classes="search-nav-btn")
@@ -280,9 +199,7 @@ class HttpDetailModal(ModalScreen):
         else:
             area = self.query_one(f"#{panel_key}-content-area", TextArea)
             matches = self._find_all_matches(area.text, search_term)
-            self.search_state[panel_key].update(
-                {"term": search_term, "matches": matches, "index": 0 if matches else -1}
-                )
+            self.search_state[panel_key].update({"term": search_term, "matches": matches, "index": 0 if matches else -1})
             if matches:
                 self._highlight_current_match(is_req)
             else:
@@ -378,13 +295,81 @@ class HttpDetailModal(ModalScreen):
 
     def action_focus_search(self) -> None:
         bar_id, input_id = ("#req-search-bar", "#input-req-search") if self.active_panel == "left" else (
-        "#res-search-bar", "#input-res-search")
+            "#res-search-bar", "#input-res-search")
         search_bar, input_widget = self.query_one(bar_id, Horizontal), self.query_one(input_id, Input)
         search_bar.toggle_class("-show")
         if search_bar.has_class("-show"):
             input_widget.focus()
         else:
             input_widget.value = ""
+
+    # --- Copy & Save Actions ---
+    @on(Button.Pressed, "#btn-copy-req")
+    def copy_request_content(self) -> None:
+        active_tab = self.query_one("#view-request", Tabs).active
+        if not active_tab:
+            return
+        if "headers" in active_tab:
+            headers_list = parse_headers_to_list(self.req_headers_raw)
+            content_to_copy = json.dumps({k: v for k, v in headers_list}, indent=2, ensure_ascii=False)
+            msg = "Đã copy Request Headers (Dạng JSON)!"
+        else:
+            content_to_copy = self.query_one("#req-content-area", TextArea).text
+            msg = "Đã copy nội dung Request!"
+        self.app.copy_to_clipboard(content_to_copy)
+        self.app.notify(msg, severity="information")
+
+    @on(Button.Pressed, "#btn-copy-res")
+    def copy_response_content(self) -> None:
+        active_tab = self.query_one("#view-response", Tabs).active
+        if not active_tab:
+            return
+        if "headers" in active_tab:
+            headers_list = parse_headers_to_list(self.res_headers_raw)
+            content_to_copy = json.dumps({k: v for k, v in headers_list}, indent=2, ensure_ascii=False)
+            msg = "Đã copy Response Headers (Dạng JSON)!"
+        else:
+            content_to_copy = self.query_one("#res-content-area", TextArea).text
+            msg = "Đã copy nội dung Response!"
+        self.app.copy_to_clipboard(content_to_copy)
+        self.app.notify(msg, severity="information")
+
+    def _save_to_file(self, content: str, prefix: str, ext: str) -> None:
+        timestamp = time.strftime("%Y%m%d_%H%M%S")
+        filename = f"{prefix}_{timestamp}.{ext}"
+        filepath = os.path.join(os.getcwd(), filename)
+        try:
+            with open(filepath, "w", encoding="utf-8") as f:
+                f.write(content)
+            self.app.notify(f"Đã lưu thành công vào file: {filename}", severity="information")
+        except Exception as e:
+            self.app.notify(f"Lỗi khi lưu file: {str(e)}", severity="error")
+
+    @on(Button.Pressed, "#btn-save-req")
+    def save_request_content(self) -> None:
+        active_tab = self.query_one("#view-request", Tabs).active
+        if not active_tab:
+            return
+        if "headers" in active_tab:
+            headers_list = parse_headers_to_list(self.req_headers_raw)
+            content_to_save = json.dumps({k: v for k, v in headers_list}, indent=2, ensure_ascii=False)
+            self._save_to_file(content_to_save, "req_headers", "json")
+        else:
+            content_to_save = self.query_one("#req-content-area", TextArea).text
+            self._save_to_file(content_to_save, "req_content", "txt")
+
+    @on(Button.Pressed, "#btn-save-res")
+    def save_response_content(self) -> None:
+        active_tab = self.query_one("#view-response", Tabs).active
+        if not active_tab:
+            return
+        if "headers" in active_tab:
+            headers_list = parse_headers_to_list(self.res_headers_raw)
+            content_to_save = json.dumps({k: v for k, v in headers_list}, indent=2, ensure_ascii=False)
+            self._save_to_file(content_to_save, "res_headers", "json")
+        else:
+            content_to_save = self.query_one("#res-content-area", TextArea).text
+            self._save_to_file(content_to_save, "res_content", "txt")
 
     @on(Button.Pressed, "#btn-menu")
     def toggle_action_menu(self) -> None:
@@ -409,6 +394,12 @@ class HttpDetailModal(ModalScreen):
         self.app.copy_to_clipboard(cmd)
         self.app.notify("Đã copy lệnh cURL!", severity="information")
         self.query_one("#action-menu").remove_class("-show")
+
+    @on(Button.Pressed, "#btn-convert-curl")
+    def action_convert_curl(self) -> None:
+        cmd = build_curl_command(self.method, self.url, self.req_headers_raw, self.req_body)
+        self.query_one("#action-menu").remove_class("-show")
+        self.app.push_screen(CurlConverterModal(initial_curl=cmd))
 
     @on(Button.Pressed, "#btn-close")
     def close_modal(self) -> None:

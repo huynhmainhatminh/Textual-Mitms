@@ -1,17 +1,21 @@
 # core/proxy.py
-import re
-from mitmproxy import options
-from mitmproxy.tools.dump import DumpMaster
+from . import *
 from .addon import TextualMitmAddon
+from .utils import hosts_to_mitm_regex_list
 
 
 class ProxyManager:
     def __init__(self, app):
         self.app = app
         self.master = None
+        self._lock = threading.Lock()
+        self._stop_requested = False
 
     def _get_regex_hosts(self, hosts_set: set) -> list[str]:
-        return [f".*{re.escape(h)}.*" for h in hosts_set]
+        # allow_hosts / ignore_hosts: sequence of regex, matched via
+        # re.search(rex, host, re.IGNORECASE) trên hostname:port
+        # (mitmproxy.addons.next_layer.NextLayer._ignore_connection)
+        return hosts_to_mitm_regex_list(hosts_set)
 
     def _build_core_options(self, host: str, port: int) -> options.Options:
         allow_list = self._get_regex_hosts(self.app.allowed_hosts) if self.app.allowed_hosts else []
@@ -29,31 +33,69 @@ class ProxyManager:
         )
 
     async def start(self, host: str, port: int) -> None:
-        opts = self._build_core_options(host, port)
-        self.master = DumpMaster(opts, with_termlog=False, with_dumper=False)
-        self.master.addons.add(TextualMitmAddon(self.app))
+        """
+        Chạy DumpMaster trên event loop hiện tại (worker thread gọi asyncio.run).
 
-        # Addon options phải update sau khi master đã load addon
-        self.master.options.update(
-            anticache=self.app.opt_anticache,
-            anticomp=self.app.opt_anticomp,
-        )
-        await self.master.run()
+        DumpMaster/Master yêu cầu event loop đã có lúc __init__:
+        event_loop = loop or asyncio.get_running_loop()
+        (mitmproxy.tools.dump.DumpMaster, mitmproxy.master.Master)
+
+        master.run() chỉ trả về sau khi should_exit được set (shutdown)
+        rồi await done(). Không gán master = None trước thời điểm đó.
+        """
+        self._stop_requested = False
+        opts = self._build_core_options(host, port)
+        loop = asyncio.get_running_loop()
+
+        with self._lock:
+            if self.master is not None:
+                return
+            if self._stop_requested:
+                return
+            # DumpMaster.__init__(options, loop=None, with_termlog=True, with_dumper=True)
+            self.master = DumpMaster(
+                opts,
+                loop=loop,
+                with_termlog=False,
+                with_dumper=False,
+            )
+            self.master.addons.add(TextualMitmAddon(self.app))
+            # Addon options phải update sau khi master đã load addon
+            self.master.options.update(
+                anticache=self.app.opt_anticache,
+                anticomp=self.app.opt_anticomp,
+            )
+
+        if self._stop_requested:
+            # stop() được gọi trong lúc vừa tạo master
+            self.master.shutdown()
+        else:
+            self.app.call_from_thread(self.app._on_proxy_started)
+
+        try:
+            await self.master.run()
+        finally:
+            with self._lock:
+                self.master = None
+            self._stop_requested = False
 
     def stop(self) -> None:
-        if self.master:
-            try:
-                loop = self.master.event_loop
-                if loop and not loop.is_closed():
-                    loop.call_soon_threadsafe(self.master.shutdown)
-            except Exception:
-                pass
-            finally:
-                self.master = None
+        """
+        Yêu cầu tắt proxy. Master.shutdown() được docs ghi là thread-safe:
+        event_loop.call_soon_threadsafe(self.should_exit.set)
+        Không xóa self.master tại đây — run() sẽ xóa trong finally sau done().
+        """
+        self._stop_requested = True
+        with self._lock:
+            master = self.master
+        if master is not None:
+            master.shutdown()
 
     def update_options(self, **kwargs) -> None:
-        if self.master:
-            self.master.options.update(**kwargs)
+        with self._lock:
+            master = self.master
+        if master is not None:
+            master.options.update(**kwargs)
 
     @property
     def is_running(self) -> bool:

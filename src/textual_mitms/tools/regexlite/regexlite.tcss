@@ -1,0 +1,351 @@
+/* Scoped dưới RegexLiteScreen.
+   Textual: Screen.CSS_PATH không tự giới hạn (issue #4294, #5342, discussion #2911).
+   Rule kiểu Screen / Horizontal / #search-input còn dính App sau pop_screen.
+   Workaround chính thức (willmcgugan): neo selector vào class màn hình. */
+
+RegexLiteScreen {
+    align: center middle;
+    background: rgba(0, 0, 0, 0.85);
+
+    #regexlite-dialog {
+        width: 95%;
+        height: 90%;
+        background: $surface;
+        border: solid $accent;
+        padding: 1 1;
+        layers: base menu;
+    }
+
+    #btn-close-modal {
+        min-width: 5;
+        border: none;
+        background: $panel;
+        color: $text;
+        text-style: bold;
+        dock: right;
+    }
+
+    #btn-close-modal:hover {
+        background: $error;
+        color: white;
+    }
+
+    .modal-header {
+        height: auto;
+        margin-bottom: 1;
+    }
+
+    .spacer { width: 1fr; }
+
+    #regexlite-body {
+        height: 1fr;
+        width: 100%;
+    }
+
+    Horizontal {
+        height: 1fr;
+        width: 100%;
+    }
+
+    #layout_1 {
+        width: 2fr;
+        height: 100%;
+        border: none;
+        layout: vertical;
+    }
+
+    #fields-box,
+    #test-box {
+        height: 1fr;
+        width: 100%;
+        layout: vertical;
+        border: heavy $panel-lighten-1;
+    }
+
+    #test-box > Horizontal {
+        height: auto;
+        width: 100%;
+        layout: horizontal;
+        margin-bottom: 1;
+    }
+
+    #layout_2 {
+        width: 4fr;
+        height: 100%;
+        border: heavy $panel-lighten-1;
+        layout: vertical;
+    }
+
+    Tab {
+        margin: 0 1;
+        color: $text;
+    }
+
+    Tabs .underline--bar {
+        color: #ffd700;
+    }
+
+    Tabs#layout_tabs {
+        height: 2;
+        background: $panel-darken-1;
+    }
+
+    #samples-actions {
+        height: auto;
+        width: 100%;
+        layout: horizontal;
+        margin-bottom: 1;
+    }
+
+    #btn-add,
+    #btn-mark,
+    #btn-del,
+    #btn-clear,
+    #btn-paste,
+    #btn-samples-build,
+    #btn-samples-clear,
+    #btn-search-prev,
+    #btn-search-next {
+        min-width: 3;
+        height: 1;
+        border: none;
+        margin-right: 1;
+        text-style: bold;
+    }
+
+    #field-list {
+        height: 1fr;
+        border: none;
+    }
+
+    #field-list > .field-item {
+        width: 100%;
+        height: auto;
+        min-width: 3;
+        border: heavy $panel-lighten-1;
+        margin-bottom: 1;
+        text-style: bold;
+    }
+
+    #field-list > .field-item.-on {
+        text-style: bold;
+        color: $success;
+    }
+
+    #sidebar-actions {
+        height: auto;
+        width: 100%;
+        layout: horizontal;
+        margin: 1;
+    }
+
+    #switcher {
+        height: 1fr;
+        width: 100%;
+    }
+
+    #switcher > Vertical,
+    #switcher > VerticalScroll {
+        height: 1fr;
+        padding: 1;
+    }
+
+    #samples-hint {
+        color: $text-muted;
+        height: 3;
+    }
+
+    #samples-text {
+        height: 1fr;
+    }
+
+    #samples-text .text-area--selection {
+        background: #ffd700;
+        color: #111111;
+        text-style: bold;
+    }
+
+    #samples-text .text-area--cursor {
+        background: #ffd700;
+        color: #111111;
+        text-style: bold reverse;
+    }
+
+    #options-box {
+        border: heavy $panel-lighten-1;
+        padding: 1;
+        margin: 1;
+        height: auto;
+    }
+
+    .opt-panel {
+        height: auto;
+        layout: vertical;
+    }
+
+    .opt-row {
+        layout: horizontal;
+        height: auto;
+        width: 100%;
+        margin-bottom: 1;
+    }
+
+    .opt-row Label {
+        width: 16;
+        content-align: left middle;
+        color: $text-muted;
+    }
+
+    .opt-row Input,
+    .opt-row Select,
+    #options-box Input,
+    #options-box Select,
+    #options-box TextArea {
+        width: 1fr;
+    }
+
+    #opt-items {
+        height: 8;
+    }
+
+    #test-stats {
+        width: 1fr;
+        height: 1;
+        text-style: bold;
+        content-align: left middle;
+        margin-bottom: 1;
+    }
+
+    #test-view,
+    #snippet-out,
+    #help-md {
+        height: 1fr;
+        overflow-y: auto;
+    }
+
+    #lib-list {
+        height: 10;
+    }
+
+    .muted {
+        color: $text-muted;
+    }
+
+    .flag-box {
+        color: $error;
+        text-style: bold;
+    }
+
+    .flag-box.-on {
+        color: $success;
+    }
+
+    #chk-capture,
+    #chk-optional {
+        min-width: 3;
+        height: 1;
+        border: none;
+        margin-right: 1;
+        text-style: bold;
+    }
+
+    #sel-pattern,
+    #sel-begin,
+    #sel-end,
+    #sel-strict,
+    #sel-action,
+    #sel-lang,
+    #opt-until,
+    #opt-preset,
+    #opt-base,
+    #opt-date,
+    #opt-control,
+    #opt-unicode,
+    #opt-dt-date,
+    #opt-dt-time,
+    #opt-src-pattern,
+    #opt-src-text,
+    #sel-group,
+    #sel-flavor {
+        height: 1;
+        border: none;
+        border-right: heavy $panel-lighten-2;
+        border-left: heavy $panel-lighten-2;
+    }
+
+    #inp-rmin,
+    #inp-rmax,
+    #inp-name,
+    #opt-text,
+    #opt-delim,
+    #opt-stop,
+    #opt-hex,
+    #opt-mask,
+    #opt-min,
+    #opt-max,
+    #opt-domains,
+    #opt-schemes,
+    #opt-custom,
+    #opt-cmin,
+    #opt-cmax,
+    #inp-repl {
+        height: 1;
+        width: 20;
+        border: none;
+        background: $panel-darken-2;
+        margin-right: 1;
+    }
+
+    #match-selects,
+    #match-repeats {
+        height: auto;
+        width: 100%;
+        layout: horizontal;
+    }
+
+    #match-selects {
+        margin-bottom: 1;
+    }
+
+    #match-selects Select {
+        width: 1fr;
+    }
+
+    #opts-anything .opt-row {
+        height: auto;
+        width: 100%;
+        layout: horizontal;
+        margin-bottom: 1;
+    }
+
+    #search-input {
+        height: 1;
+        width: 1fr;
+        border: none;
+        background: $panel-darken-2;
+        margin-right: 1;
+    }
+
+    #search-count {
+        width: auto;
+        height: 1;
+        color: $text-muted;
+        content-align: left middle;
+    }
+
+    #regex-out {
+        height: auto;
+        width: 1fr;
+        color: #ffd700;
+        text-style: bold;
+        text-wrap: wrap;
+    }
+
+    #btn-copy {
+        min-width: 3;
+        height: 1;
+        border: none;
+        margin-right: 1;
+        text-style: bold;
+    }
+}
