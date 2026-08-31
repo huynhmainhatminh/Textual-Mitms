@@ -3,8 +3,17 @@
 **Textual-Mitms is a terminal-based MITM proxy tool built on Textual and mitmproxy.**
 It allows you to capture, view, and filter HTTP/HTTPS, WebSocket, and TCP packets directly within a TUI—offering a compact, fast, and simple experience without the need to open a web browser.
 
-![Textual-Mitms Demo](demo-textual-mitms.gif)
+![Textual-Mitms Demo](gif/demo-textual-mitms.gif)
 
+## Features
+- Live HTTP(S) history
+- Capture HTTP/2, HTTP/3, and WebSocket packets
+- Search 13 field, 10 mode
+- Allow / Ignore hosts
+- Filter AND — protocol (HTTP/HTTPS/WEBSOCKET), HTTP1/2/3, MIME, 1xx–5xx.
+- Copy / Save — body, headers JSON, cURL, URL,..
+- The RegexLite tool makes creating regular expressions simple and efficient.
+- The Curlconverter tool helps convert cURL commands into various programming languages.
 ## Installing
 
 The package can be installed with `pip` or related tools, for example:
@@ -14,6 +23,20 @@ pip install textual-mitms==0.2.0
 ```
  Now you can run textual-mitms via the command line:
 
-```bash
+```sh
 textual-mitms
 ```
+CLI
+```sh
+textual-mitms --help
+```
+
+## Using basic RegexLite
+![RegexLite Demo](gif/RegexLite.gif)
+
+## Using basic Curlconverter
+![Curlconverter Demo](gif/Curlconverter.gif)
+
+## Dependent
+- [mitmproxy](https://docs.mitmproxy.org/) — An interactive TLS-capable intercepting HTTP proxy for penetration testers and software developers.
+- [Textual](https://textual.textualize.io/) — The lean application framework for Python. Build sophisticated user interfaces with a simple Python API. Run your apps in the terminal and a web browser.
