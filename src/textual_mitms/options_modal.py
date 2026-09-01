@@ -60,6 +60,14 @@ class OptionsModal(ModalScreen[dict | None]):
                 yield Label("SSL Insecure", classes="option-label")
                 yield Switch(value=self.current["ssl_insecure"], id="switch-ssl-insecure")
 
+            yield Label("── System Proxy ──", classes="section-title")
+            with Horizontal(classes="option-row"):
+                yield Label("Auto OS proxy on Start/Stop", classes="option-label")
+                yield Switch(
+                    value=self.current.get("system_proxy", True),
+                    id="switch-system-proxy",
+                )
+
             with Horizontal(id="options-buttons"):
                 yield Button("Save", id="btn-apply", variant="success")
                 yield Button("Cancel", id="btn-cancel", variant="error")
@@ -94,6 +102,7 @@ class OptionsModal(ModalScreen[dict | None]):
             "anticache": self.query_one("#switch-anticache", Switch).value,
             "anticomp": self.query_one("#switch-anticomp", Switch).value,
             "ssl_insecure": self.query_one("#switch-ssl-insecure", Switch).value,
+            "system_proxy": self.query_one("#switch-system-proxy", Switch).value,
         }
         self.dismiss(result)
 

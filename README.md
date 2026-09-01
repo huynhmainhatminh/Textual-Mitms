@@ -16,19 +16,34 @@ It allows you to capture, view, and filter HTTP/HTTPS, WebSocket, and TCP packet
 - The Curlconverter tool helps convert cURL commands into various programming languages.
 ## Installing
 
-The package can be installed with `pip` or related tools, for example:
+#### The package can be installed with `pip` or related tools, for example:
 
 ```sh
-pip install textual-mitms==0.2.0
+pip install textual-mitms==0.2.1
 ```
- Now you can run textual-mitms via the command line:
+
+#### Run CLI
+```sh
+textual-mitms --help
+```
+#### Install CA certificate (Run as administrator)
+```sh
+textual-mitms cert generate
+```
+```sh
+textual-mitms cert status
+```
+```sh
+textual-mitms cert install
+```
+#### Now you can run textual-mitms via the command line:
 
 ```sh
 textual-mitms
 ```
-CLI
+#### Uninstall CA certificate (Run as administrator)
 ```sh
-textual-mitms --help
+textual-mitms cert uninstall
 ```
 
 ## Using basic RegexLite

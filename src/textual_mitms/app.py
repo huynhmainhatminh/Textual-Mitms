@@ -12,14 +12,18 @@ from textual.widgets import (
 )
 from textual.widgets.selection_list import Selection
 from textual.widgets.data_table import RowDoesNotExist
+from textual.css.query import NoMatches
 from textual.timer import Timer
 from textual import events, on, work
 
 from .core.proxy import ProxyManager
 from .core.utils import hosts_to_mitm_regex_list, unique_normalized_hosts, subtract_same_host_rules
+from .core.ca import ensure_ca, trust_status
+from .core.system_proxy import apply_system_proxy, restore_system_proxy, system_proxy_status
 from .http_detail_modal import HttpDetailModal
 from .prompt_modal import PromptModal
 from .options_modal import OptionsModal
+from .ca_modal import CaCertModal
 from .tools.regexlite.screen import RegexLiteScreen
 
 
@@ -31,6 +35,7 @@ class TextualMitms(App):
     BINDINGS = [
         Binding("ctrl+s", "toggle_proxy", "Start/Stop Proxy", show=True, priority=True),
         Binding("ctrl+r", "open_regexlite", "RegexLite", show=True, priority=True),
+        Binding("ctrl+t", "open_ca_cert", "CA Cert", show=True, priority=True),
     ]
 
     # MessagePump.set_timer(delay: float, ...) — delay tính bằng giây
@@ -94,6 +99,9 @@ class TextualMitms(App):
         self.opt_anticache = False
         self.opt_anticomp = False
         self.opt_ssl_insecure = False
+        # Gắn proxy OS khi Start/Stop. Tắt trong Options nếu chỉ muốn proxy thủ công.
+        self.opt_system_proxy = True
+        self._os_proxy_applied = False
 
         # stopped | starting | running | stopping
         self.proxy_phase = "stopped"
@@ -116,6 +124,9 @@ class TextualMitms(App):
             yield Button("Allow Hosts +", id="btn-allow-hosts", variant="primary")
             yield Button("Ignore Hosts +", id="btn-ignore-hosts", variant="warning")
             yield Button("Options", id="btn-options", variant="primary")
+            yield Button("CA Cert", id="btn-ca-cert", variant="primary")
+            yield Label("CA: —", id="lbl-ca-status")
+            yield Label("OS-PX: —", id="lbl-os-proxy")
 
             yield Select(self.SEARCH_FIELDS, value="path", id="search-field", allow_blank=False, compact=True)
             yield Select(self.SEARCH_MODES, value="contains", id="search-mode", allow_blank=False, compact=True)
@@ -147,6 +158,59 @@ class TextualMitms(App):
             selector.add_option(Selection(col, col, True))
         self.rebuild_table(self.active_columns)
         self.query_one("#history-table", DataTable).focus()
+        # Sinh CA ngay khi mở app — cùng file DumpMaster sẽ dùng (CONF_DIR).
+        try:
+            ensure_ca()
+        except Exception as e:
+            self.notify(f"Không generate được CA: {e}", severity="error")
+        self.refresh_ca_status()
+        self._refresh_os_proxy_label()
+        # Lần chạy trước crash: trả proxy OS về snapshot nếu còn file.
+        self._restore_os_proxy_safe()
+
+    def _refresh_os_proxy_label(self) -> None:
+        flag = "on" if self.opt_system_proxy else "off"
+        applied = "active" if self._os_proxy_applied else "idle"
+        try:
+            self.query_one("#lbl-os-proxy", Label).update(f"OS-PX:{flag}/{applied}")
+        except NoMatches:
+            pass
+
+    def _apply_os_proxy_safe(self) -> None:
+        if not self.opt_system_proxy:
+            return
+        result = apply_system_proxy(self.listen_host, self.listen_port)
+        self._os_proxy_applied = result.applied
+        try:
+            if result.ok:
+                self.notify(result.message, severity="information")
+            else:
+                self.notify(f"OS proxy: {result.message}", severity="warning")
+        except Exception:
+            pass
+        self._refresh_os_proxy_label()
+
+    def _restore_os_proxy_safe(self, *, update_ui: bool = True) -> None:
+        result = restore_system_proxy()
+        if result.restored:
+            self._os_proxy_applied = False
+            if update_ui:
+                try:
+                    self.notify(result.message, severity="information" if result.ok else "warning")
+                except Exception:
+                    pass
+        if update_ui:
+            self._refresh_os_proxy_label()
+
+    def refresh_ca_status(self) -> None:
+        try:
+            state, _detail = trust_status()
+        except Exception:
+            state = "unknown"
+        try:
+            self.query_one("#lbl-ca-status", Label).update(f"CA: {state}")
+        except NoMatches:
+            pass
 
     def _get_regex_hosts(self, hosts_set: set) -> list[str]:
         return hosts_to_mitm_regex_list(hosts_set)
@@ -244,6 +308,7 @@ class TextualMitms(App):
             "anticache": self.opt_anticache,
             "anticomp": self.opt_anticomp,
             "ssl_insecure": self.opt_ssl_insecure,
+            "system_proxy": self.opt_system_proxy,
         }
 
         def on_closed(result: dict | None) -> None:
@@ -256,6 +321,8 @@ class TextualMitms(App):
             self.opt_anticache = result["anticache"]
             self.opt_anticomp = result["anticomp"]
             self.opt_ssl_insecure = result["ssl_insecure"]
+            self.opt_system_proxy = result.get("system_proxy", self.opt_system_proxy)
+            self._refresh_os_proxy_label()
 
             self.proxy.update_options(
                 http2=self.opt_http2,
@@ -267,6 +334,25 @@ class TextualMitms(App):
             )
 
         self.push_screen(OptionsModal(current), on_closed)
+
+    # ==========================================
+    # CA CERT
+    # ==========================================
+    def action_open_ca_cert(self) -> None:
+        self._open_ca_modal()
+
+    @on(Button.Pressed, "#btn-ca-cert")
+    def open_ca_cert_button(self) -> None:
+        self._open_ca_modal()
+
+    def _open_ca_modal(self) -> None:
+        def on_closed(_result: None) -> None:
+            self.refresh_ca_status()
+
+        self.push_screen(
+            CaCertModal(self.listen_host, self.listen_port),
+            on_closed,
+        )
 
     # ==========================================
     # HOST LISTS
@@ -431,6 +517,8 @@ class TextualMitms(App):
             self.notify("Invalid proxy format (Required: HOST:PORT)", severity="error")
             return
 
+        self.listen_host = host
+        self.listen_port = port
         self._set_proxy_phase("starting")
         self.run_proxy_worker(host, port)
 
@@ -442,11 +530,14 @@ class TextualMitms(App):
         if self.proxy_phase == "stopping":
             return
         self._set_proxy_phase("running")
+        self._apply_os_proxy_safe()
 
     def _on_proxy_stopped(self) -> None:
+        self._restore_os_proxy_safe()
         self._set_proxy_phase("stopped")
 
     def _on_proxy_failed(self, error: BaseException) -> None:
+        self._restore_os_proxy_safe()
         self._set_proxy_phase("stopped")
         self.notify(f"Proxy startup error: {error}", severity="error")
 
@@ -466,6 +557,8 @@ class TextualMitms(App):
         self.proxy.stop()
 
     async def on_unmount(self) -> None:
+        # DOM đã tháo widget — không query #lbl-os-proxy / notify.
+        self._restore_os_proxy_safe(update_ui=False)
         self.stop_proxy()
 
     # ==========================================

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "textual-mitms"
-version = "0.2.0"
+version = "0.2.1"
 description = "A tool for capturing full network traffic (HTTP/HTTPS, WebSocket, TCP) based on mitmproxy and the Textual terminal user interface."
 readme = "README.md"
 requires-python = ">=3.11"

@@ -3,8 +3,8 @@
 /* ========================================= */
 /* CSS CHO MAIN APP (app.py)                 */
 /* ========================================= */
-.config-panel { border: heavy $panel-lighten-2; padding: 1 1; }
-#config_1 { height: auto; padding: 1 1; align-vertical: middle; background: $panel-darken-1; border-bottom: heavy $panel-lighten-2; }
+.config-panel { border: heavy $panel-lighten-1; padding: 1 1; }
+#config_1 { height: auto; padding: 1 1; align-vertical: middle; background: $panel-darken-1; border-bottom: heavy $panel-lighten-1; }
 #config_2 { height: 2; align-vertical: middle; }
 #config_2.-hidden { display: none; }
 #config_3 { height: 2fr; layers: base menu; }
@@ -24,17 +24,17 @@ Tabs .underline--bar {
     color: #ffd700;
 }
 
-Tabs#application-protocols { height: 2; background: $panel-darken-1; border-right: heavy $panel-lighten-2; width: 0.9fr; }
-Tabs#http-version { height: 2; background: $panel-darken-1; border-right: heavy $panel-lighten-2; width: 0.7fr; }
-Tabs#mime-types { height: 2; background: $panel-darken-1; border-right: heavy $panel-lighten-2; width: 1fr; }
+Tabs#application-protocols { height: 2; background: $panel-darken-1; border-right: heavy $panel-lighten-1; width: 0.9fr; }
+Tabs#http-version { height: 2; background: $panel-darken-1; border-right: heavy $panel-lighten-1; width: 0.7fr; }
+Tabs#mime-types { height: 2; background: $panel-darken-1; border-right: heavy $panel-lighten-1; width: 1fr; }
 Tabs#status-codes { height: 2; background: $panel-darken-1; width: 0.8fr; }
-#nav-traffic { text-style: bold; padding: 0 1; background: $panel-darken-1; border-bottom: heavy $panel-lighten-2; border-right: heavy $panel-lighten-2; border-left: heavy $panel-lighten-2; }
-#btn-col-config { border: none; border-bottom: heavy $panel-lighten-2; border-left: heavy $panel-lighten-2; background: $panel-darken-1; color: $text; text-style: bold; border-right: heavy $panel-lighten-2; }
+#nav-traffic { text-style: bold; padding: 0 1; background: $panel-darken-1; border-bottom: heavy $panel-lighten-1; border-right: heavy $panel-lighten-1; border-left: heavy $panel-lighten-1; }
+#btn-col-config { border: none; border-bottom: heavy $panel-lighten-1; border-left: heavy $panel-lighten-1; background: $panel-darken-1; color: $text; text-style: bold; border-right: heavy $panel-lighten-1; }
 #lbl-proxy { text-style: bold; color: $accent; margin-right: 1; }
 #lbl-status-icon { color: $error; text-style: bold; margin-right: 1; }
 #lbl-status-icon.-running { color: $success; }
 #input-proxy { height: 1; width: 20; border: none; background: $panel-darken-2; margin-right: 2; }
-#input-proxy:focus { background: $panel-lighten-2; text-style: bold; }
+#input-proxy:focus { background: $panel-lighten-1; text-style: bold; }
 
 /* Cập nhật Các nút bấm trên thanh công cụ: Thêm 2 nút Toggle mới vào danh sách */
 #btn-toggle-run, #btn-clear-data, #btn-toggle-filter, #btn-allow-hosts, #btn-ignore-hosts, #btn-options {
@@ -54,7 +54,7 @@ Tabs#status-codes { height: 2; background: $panel-darken-1; width: 0.8fr; }
 /* Menu chọn cột */
 #col-menu { layer: menu; display: none; dock: right; width: 25; height: auto; max-height: 15; background: $surface; border: round $accent; padding: 0 1; }
 #col-menu.-show { display: block; }
-#col-menu Label { text-style: bold; margin-bottom: 1; border-bottom: solid $panel-lighten-2; width: 100%; text-align: center; }
+#col-menu Label { text-style: bold; margin-bottom: 1; border-bottom: solid $panel-lighten-1; width: 100%; text-align: center; }
 #col-menu SelectionList { border: none; height: auto; }
 SelectionList > .selection-list--button { color: $error; }
 SelectionList > .selection-list--button-selected { color: $success; }
@@ -112,7 +112,7 @@ TextArea:focus {
 }
 
 /* Smart Search */
-.search-bar-container { height: auto; width: 100%; align-vertical: middle; margin-top: 1; display: none; background: $panel; border: tall $panel-lighten-2; padding: 0 1; }
+.search-bar-container { height: auto; width: 100%; align-vertical: middle; margin-top: 1; display: none; background: $panel; border: tall $panel-lighten-1; padding: 0 1; }
 .search-bar-container.-show { display: block; }
 .search-bar-container:focus-within { border: tall $accent; }
 .search-input { width: 1fr; border: none; background: transparent; height: 1; min-height: 1; }
@@ -201,16 +201,16 @@ Switch {
     width: 20;
     margin-right: 1;
     color: $text;
-    border-right: heavy $panel-lighten-2;
-    border-left: heavy $panel-lighten-2;
+    border-right: heavy $panel-lighten-1;
+    border-left: heavy $panel-lighten-1;
 }
 
 #search-mode {
     width: 20;
     margin-right: 1;
     color: $text;
-    border-right: heavy $panel-lighten-2;
-    border-left: heavy $panel-lighten-2;
+    border-right: heavy $panel-lighten-1;
+    border-left: heavy $panel-lighten-1;
 }
 
 #search-input {
@@ -222,5 +222,63 @@ Switch {
 }
 
 #search-input:focus {
-    background: $panel-lighten-2;
+    background: $panel-lighten-1;
+}
+/* ========================================= */
+/* CSS CHO CA CERT (thêm vào styles.tcss)    */
+/* ========================================= */
+#btn-ca-cert {
+    min-width: 3;
+    height: 1;
+    border: none;
+    margin-right: 1;
+    text-style: bold;
+}
+
+#lbl-ca-status, #lbl-os-proxy {
+    text-style: bold;
+    color: $text-muted;
+    margin-right: 1;
+    padding: 0 1;
+}
+
+CaCertModal {
+    align: center middle;
+    background: rgba(0, 0, 0, 0.7);
+}
+
+#ca-dialog {
+    width: 90;
+    height: auto;
+    max-height: 90%;
+    background: $surface;
+    border: heavy $accent;
+    padding: 1 1;
+}
+
+#ca-status, #ca-detail, #ca-meta, #ca-warn {
+    width: 100%;
+    height: auto;
+    margin: 0 0 1 0;
+}
+
+#ca-meta {
+    color: $text-muted;
+}
+
+#ca-warn {
+    color: $warning;
+}
+
+#ca-buttons, #ca-buttons-2, #ca-buttons-3 {
+    height: auto;
+    align: center middle;
+    margin-top: 1;
+}
+
+#ca-buttons Button, #ca-buttons-2 Button, #ca-buttons-3 Button {
+    min-width: 12;
+    margin: 0 1;
+    border: none;
+    text-style: bold;
 }
